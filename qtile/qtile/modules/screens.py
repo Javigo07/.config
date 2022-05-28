@@ -1,6 +1,9 @@
-from libqtile import bar, widget, layout
+from libqtile import bar, layout
+from qtile_extras import widget
 from libqtile.config import Screen, Match
 from .colors import colors
+from .cuswidgets import ExpandingClock
+
 #from qtile_extras import widget as widgetEx 
 
 layouts = [
@@ -23,96 +26,44 @@ floating_layout = layout.Floating(float_rules=[
     Match(wm_class='osu!.exe')
 ])
 
-bgwidgets = colors[1]+'66'
+bgwidgets = [colors[1]+'80', colors[0]+'80']
 bgbar = colors[0]+'80'
-
+bglyphs = colors[0]+'00'
+fglyphs = colors[1]+'40'
 
 widget_defaults = dict(
     font='Iosevka Term Nerd Font Complete',
     fontsize=18,
     padding=-2, 
-    foreground=bgwidgets,
-)
+    foreground=colors[0],
+    font_colour=colors[8])
 
 
 extension_defaults = widget_defaults.copy()
 
 Sep = widget.Sep(
         size_percent=100,
-        background=bgwidgets)  
+        background=bgwidgets,
+        foreground='#ffffff',
+        linewidth=1,
+        padding=4)  
 
 GroupBoxx = widget.GroupBox(
         background=bgwidgets,
         inactive=colors[0],
-        this_current_screen_border=colors[3],
-        this_screen_border=colors[0],
+        this_current_screen_border=[colors[3],colors[1]],
+        this_screen_border=[colors[1],colors[3]],
         rounded=True,
-        other_screen_border='#240b0b',
-        other_current_screen_border='#240b0b', 
+        other_screen_border=[colors[1],colors[3]],
+        other_current_screen_border=[colors[3],colors[1]], 
         spacing=3, 
-        borderwidth=2) 
-class ExpandingClock(widget.Clock):
-    defaults = [
-        ("long_format", "%A %d %B %Y | %H:%M", "Format to show when mouse is over widget."),
-        ("animation_time", 2, "Time in seconds for animation"),
-        ("animation_step", 0.05, "Time in seconds for each step of the animation")
-    ]
+        borderwidth=3,
+        highlight_method='line',
+        highlight_color=[colors[1]+'4D',colors[0]+'4D']
+        ) 
 
-    def __init__(self, **config):
-        widget.Clock.__init__(self, **config)
-        self.add_defaults(ExpandingClock.defaults)
-        self.short_format = self.format
-        self.current_length = 0
-        self.toggled = False
-        self.step = 0
-        self.add_callbacks(
-            {
-                "Button1": self.toggle
-            }
-        )
 
-    def _configure(self, qtile, bar):
-        widget.Clock._configure(self, qtile, bar)
-        self.update(self.poll())
-        self.target_length = self.layout.width + self.padding * 2
 
-    def calculate_length(self):
-        if not self.configured:
-            return self.current_length
-
-        if self.current_length == 0:
-            return self.target_length
-
-        return self.current_length
-
-    def toggle(self):
-        if self.toggled:
-            self.format = self.short_format
-        else:
-            self.format = self.long_format
-
-        self.toggled = not self.toggled
-        self.update(self.poll())
-        self.target_length = self.layout.width
-        self.step = int((self.target_length - self.current_length) / (self.animation_time / self.animation_step))
-
-        if self.step:
-            self.timeout_add(self.animation_step, self.grow)
-
-    def grow(self):
-        target = self.layout.width + self.padding * 2
-
-        self.current_length += self.step
-
-        if self.step < 0:
-            self.current_length = max(self.current_length, target)
-        else:
-            self.current_length = min(self.current_length, target)
-
-        if self.current_length != target:
-            self.timeout_add(self.animation_step, self.grow)
-
-        self.bar.draw()
 
 screens = [
    Screen(
@@ -123,34 +74,44 @@ screens = [
                 widget.TextBox(
                     text='',
                     fontsize=24,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-2),
                 widget.CurrentLayoutIcon(
                     background=bgwidgets),
                 Sep,
-                widget.CurrentLayout(
+                widget.Spacer(
+                    length=2,
+                    background=bgwidgets
+                    ),
+                widget.AGroupBox(
                     background=bgwidgets,
-                    padding=0),
-                widget.Prompt(),
+                    padding_x=2,
+                    borderwidth=0),
+                widget.Prompt(
+                    background=bgwidgets),
+                Sep,
+                widget.GlobalMenu(),
+                #    background=bgwidgets,
+                 #   ),
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-12),  
                 widget.Spacer(bar.STRETCH),
                 widget.TextBox(text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
-                    padding=-12), 
+                    background=bgwidgets,
+                    foreground=bglyphs, 
+                    padding=-12),  
                 GroupBoxx,
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-12),
                 widget.Spacer(
                     bar.STRETCH),
@@ -158,16 +119,17 @@ screens = [
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-12),
-                widget.Clock(
-                    format='%H:%M:%S',
-                    background=bgwidgets),
+                ExpandingClock(
+                    format="%H:%M:%S",
+                    background=bgwidgets
+                    ),
                 widget.TextBox(text='',
                     fontsize=24,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    foreground=bglyphs,
+                    background=bgwidgets,
                     padding=-2),
             ],
             28,
@@ -179,37 +141,37 @@ screens = [
                widget.TextBox(
                    text='',
                    fontsize=24,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   foreground=bglyphs,
+                   background=bgwidgets,
                    padding=-2), 
-               #widgetEx.ALSAWidget(background=bgwidgets),
+               widget.ALSAWidget(background=bgwidgets),
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,
                    padding=-12),  
-               widget.Spacer(bar.STRETCH), 
+               #widget.Spacer(bar.STRETCH), 
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
-                   padding=-10),
+                   background=bgwidgets,
+                   foreground=bglyphs,
+                   padding=-2),
                widget.WindowName(
                    empty_group_string="None",
                    background=bgwidgets),
                widget.TextBox(text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-15),
-               widget.Spacer(bar.STRETCH),
+               #widget.Spacer(bar.STRETCH),
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-12),  
                widget.QuickExit(
                    default_text='',
@@ -218,74 +180,76 @@ screens = [
                widget.TextBox(
                    text='',
                    fontsize=24,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-2),
            ],
            28,
            background=bgbar,
-           margin=[0, 100, 2, 100]
+           margin=[0, 650, 2, 650]
         ),
-        right=bar.Bar(
-            [
-           #widget.Bluetooth(background=bgwidgets),
-           widget.CPU(background=bgwidgets) ],
-            28,
-            background=bgbar,
-            margin=[10, 2, 10, 0]
-            )
+
     ),
 Screen(
         #wallpaper_mode="fill",
         top=bar.Bar(
             [
-
                 widget.TextBox(
                     text='',
                     fontsize=24,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-2),
-                widget.CurrentLayoutIcon(background=bgwidgets),
+                widget.CurrentLayoutIcon(
+                    background=bgwidgets),
                 Sep,
-                widget.CurrentLayout(background=bgwidgets,
-                    padding=0),
-                widget.Prompt(),
+                widget.Spacer(
+                    length=2,
+                    background=bgwidgets
+                    ),
+                widget.AGroupBox(
+                    background=bgwidgets,
+                    padding_x=2,
+                    borderwidth=0),
+                widget.Prompt(
+                    background=bgwidgets),
+                Sep,
+                #widget.GlobalMenu(),
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,
                     padding=-12),  
                 widget.Spacer(bar.STRETCH),
-                widget.TextBox(
-                    text='',
+                widget.TextBox(text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
-                    padding=-12), 
+                    background=bgwidgets,
+                    foreground=bglyphs, 
+                    padding=-12),
                 GroupBoxx,
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,  
                     padding=-12),
                 widget.Spacer(bar.STRETCH), 
                 widget.TextBox(
                     text='',
                     fontsize=60,
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,  
                     padding=-12),
-                widget.Clock(
-                    format='%H:%M:%S', 
-                    background=bgwidgets),
+                ExpandingClock(
+                    format="%H:%M:%S",
+                    background=bgwidgets
+                    ),
                 widget.TextBox(
                     text='', 
                     fontsize=24, 
-                    background=bgbar,
-                    foreground=bgwidgets,
+                    background=bgwidgets,
+                    foreground=bglyphs,  
                     padding=-2),
            ],
             28,
@@ -298,22 +262,27 @@ Screen(
                widget.TextBox(
                    text='',
                    fontsize=24,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-2), 
-               widget.PulseVolume(background=bgwidgets),
+               widget.Mpris2(
+                   name='Cider',
+                   objname=None,
+                   display_metadata = ['xesam:title', 'xesam:artist'],
+                   stop_pause_text= 'Paused',
+                   background=bgwidgets),
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-12),  
                widget.Spacer(bar.STRETCH), 
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-10),
                widget.WindowName(
                    empty_group_string="None",
@@ -321,39 +290,31 @@ Screen(
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-15),
                widget.Spacer(bar.STRETCH),
                widget.TextBox(
                    text='',
                    fontsize=60,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-12),
                widget.Mpris2(
                    background=bgwidgets), 
                widget.TextBox(
                    text='',
                    fontsize=24,
-                   background=bgbar,
-                   foreground=bgwidgets,
+                   background=bgwidgets,
+                   foreground=bglyphs,  
                    padding=-2),
               ],
            28,
            background=bgbar,
-           margin=[0, 100, 2, 100]
+           margin=[0, 150, 2, 150]
         ),
 
-        left=bar.Bar(
-            [
-           #widget.Bluetooth(background=bgwidgets),
-           widget.CPU(background=bgwidgets) ],
-            28,
-            background=bgbar,
-            margin=[10, 2, 10, 0]
-            )
- ),
+ )
       
 
 ]
